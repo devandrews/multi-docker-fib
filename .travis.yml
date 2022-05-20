@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t devandrews/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run devandrews/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t devandrews/multi-docker-client ./client
+  - docker build -t devandrews/multi-docker-nginx ./nginx
+  - docker build -t devandrews/multi-docker-server ./server
+  - docker build -t devandrews/multi-docker-worker ./worker
+  # Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take the images and push them to docker hub
+  - docker push devandrews/multi-docker-client
+  - docker push devandrews/multi-docker-nginx
+  - docker push devandrews/multi-docker-server
+  - docker push devandrews/multi-docker-worker
